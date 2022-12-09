@@ -1,0 +1,117 @@
+﻿@page "/"
+@using System.Globalization
+
+<PageTitle>Investor calculator</PageTitle>
+
+<h3>Calculator</h3>
+
+
+<div class="container text-center">
+    <div class="row">
+        <div class="col">
+            <div class="input-group">
+                <span class="input-group-text">Investing per week</span>
+                <input @bind-value="_investor.WeekInvesting" type="number" class="form-control" aria-label="Dollar amount">
+                <span class="input-group-text">$</span>
+            </div>
+        </div>
+        <div class="col">
+            <div class="input-group">
+                <span class="input-group-text">Average Yied return</span>
+                <input @bind-value="_investor.Yield" type="number" class="form-control" aria-label="Yield return"/>
+                <span class="input-group-text">%</span>
+            </div>
+        </div>
+        <div class="col">
+            <div class="input-group">
+                <span class="input-group-text">How many years</span>
+                <input @bind-value="_investor.Years" type="number" class="form-control" aria-label="Years of Investments"/>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="form-check form-switch">
+                <input class="form-check-input" @onchange="e => StartBalanceChange(e)" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+                <label class="form-check-label" for="flexSwitchCheckDefault">Start Balance</label>
+            </div>
+        </div>
+
+
+    </div>
+    @if (_useStartBalance)
+    {
+        <div style="margin-top: 10px" class="col">
+            <div class="input-group">
+                <span class="input-group-text">Start Balance</span>
+                <input @bind-value="_investor.StartBalance" type="number" class="form-control" aria-label="Start Balance"/>
+                <span class="input-group-text">$</span>
+            </div>
+        </div>
+    }
+    <button @onclick="Calculator" style="margin-top: 10px" class="btn btn-primary">Submit</button>
+</div>
+
+
+@if (_total != null)
+
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">Year</th>
+            <th scope="col">Money Invested</th>
+            <th scope="col">Compound Interest</th>
+            <th scope="col">Total</th>
+        </tr>
+        </thead>
+        <tbody>
+        @for (var i = 1; i < _investor.Years + 1; i++)
+        {
+            <tr>
+                <td>@i</td>
+                <td>@_invested[i].ToString("N", separator)</td>
+                <td>@_compoundInterest[i].ToString("N", separator)</td>
+                <td>@_total[i].ToString("N", separator)</td>
+            </tr>
+        }
+
+
+
+
+        </tbody>
+    </table>
+}
+
+@code {
+
+    private bool _useStartBalance;
+    List<double>? _total;
+    List<double> _compoundInterest;
+    List<double> _invested;
+
+    readonly NumberFormatInfo separator = new()
+    {
+        NumberDecimalDigits = 0,
+        NumberGroupSeparator = " "
+    };
+
+    private readonly InvestModel _investor = new();
+
+    private void Calculator(MouseEventArgs arg)
+    {
+        _total = _investor.TotalBalance();
+        _compoundInterest = _investor.CoumpoundInterest(_total);
+        _invested = _investor.InvestingYears();
+    }
+
+
+    private void StartBalanceChange(ChangeEventArgs changeEventArgs)
+    {
+        if (changeEventArgs.Value == null) return;
+
+        var useStartBalance = (bool) changeEventArgs.Value;
+        _useStartBalance = useStartBalance;
+        _investor.StartBalance = 0;
+    }
+
+}
